@@ -5,4 +5,5 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('templates/', views.template_list, name='template_list'),
     path('templates/create/', views.create_template, name='create_template'),
+    path('analytics/', views.analytics, name='analytics'),
 ]

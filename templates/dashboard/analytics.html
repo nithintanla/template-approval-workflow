@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Analytics Dashboard</h1>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    {{ views_chart|safe }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    {{ response_chart|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Performance Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Agent Performance</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Agent Name</th>
+                            <th>Brand</th>
+                            <th>Templates</th>
+                            <th>Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agent in agent_stats %}
+                        <tr>
+                            <td>{{ agent.name }}</td>
+                            <td>{{ agent.brand }}</td>
+                            <td>{{ agent.templates }}</td>
+                            <td>{{ agent.active }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

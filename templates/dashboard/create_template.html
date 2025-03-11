@@ -18,15 +18,18 @@
 </div>
 
 <!-- Approval Modal -->
-<div class="modal fade" id="approvalModal" tabindex="-1">
+<div class="modal fade" id="approvalModal" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Template Submission</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p id="approvalMessage"></p>
+                <div id="approvalMessage"></div>
+                <div class="status-message mt-2">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText"></span>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
@@ -45,14 +48,24 @@ $(document).ready(function() {
             type: 'POST',
             data: $(this).serialize(),
             success: function(response) {
-                $('#approvalMessage').text(response.message + ' - ' + response.approval_message);
+                // Update modal content
+                $('#approvalMessage').text(response.message);
+                
+                // Update status indicator and text
+                $('#statusIndicator').removeClass().addClass('status-indicator status-' + response.approval_status);
+                $('#statusText').text(response.approval_message);
+                
+                // Show modal
                 var modal = new bootstrap.Modal(document.getElementById('approvalModal'));
                 modal.show();
                 
                 // Redirect after modal is closed
-                $('#approvalModal').on('hidden.bs.modal', function () {
+                $('#approvalModal').on('hidden.bs.modal', function() {
                     window.location.href = "{% url 'template_list' %}";
                 });
+            },
+            error: function() {
+                alert('An error occurred while submitting the template.');
             }
         });
     });

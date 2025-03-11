@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Create Template</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post" id="templateForm">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary">Create Template</button>
+                <a href="{% url 'template_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Approval Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Template Submission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="approvalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#templateForm').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#approvalMessage').text(response.message + ' - ' + response.approval_message);
+                var modal = new bootstrap.Modal(document.getElementById('approvalModal'));
+                modal.show();
+                
+                // Redirect after modal is closed
+                $('#approvalModal').on('hidden.bs.modal', function () {
+                    window.location.href = "{% url 'template_list' %}";
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

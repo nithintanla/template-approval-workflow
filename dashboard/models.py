@@ -54,3 +54,17 @@ class Analytics(models.Model):
 
     class Meta:
         verbose_name_plural = "Analytics"
+
+class ApprovalSettings(models.Model):
+    rejection_keywords = models.TextField(
+        help_text="Enter keywords separated by commas. Templates containing these words will be rejected."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Approval Settings"
+        verbose_name_plural = "Approval Settings"
+
+    def get_keywords_list(self):
+        return [k.strip().lower() for k in self.rejection_keywords.split(',') if k.strip()]

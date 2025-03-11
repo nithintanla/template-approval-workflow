@@ -1,13 +1,21 @@
+from .models import ApprovalSettings
+
 class TemplateApprovalService:
     @staticmethod
     def check_approval(content):
         """
-        Mock API service to check template approval
+        Check template against configured rejection keywords
         Returns: (approved: bool, message: str)
         """
-        content = content.lower()
-        if "good" in content:
+        try:
+            settings = ApprovalSettings.objects.latest('created_at')
+            keywords = settings.get_keywords_list()
+            content = content.lower()
+            
+            for keyword in keywords:
+                if keyword in content:
+                    return False, f"Template rejected - contains prohibited word: {keyword}"
+            
             return True, "Template approved automatically"
-        elif "bad" in content:
-            return False, "Template rejected due to inappropriate content"
-        return False, "Template rejected - does not meet approval criteria"
+        except ApprovalSettings.DoesNotExist:
+            return True, "Template approved (no rejection rules configured)"

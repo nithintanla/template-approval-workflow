@@ -99,3 +99,35 @@ def analytics(request):
         'agent_stats': agent_stats
     }
     return render(request, 'dashboard/analytics.html', context)
+
+@login_required
+def approval_settings(request):
+    settings = ApprovalSettings.objects.latest('created_at') if ApprovalSettings.objects.exists() else None
+    
+    if request.method == 'POST':
+        keywords = request.POST.get('rejection_keywords', '')
+        if settings:
+            settings.rejection_keywords = keywords
+            settings.save()
+        else:
+            settings = ApprovalSettings.objects.create(rejection_keywords=keywords)
+        messages.success(request, 'Approval settings updated successfully.')
+        return redirect('approval_settings')
+        
+    return render(request, 'dashboard/approval_settings.html', {'settings': settings})
+
+@login_required
+def review_templates(request):
+    templates = Template.objects.filter(status='rejected')
+    return render(request, 'dashboard/review_templates.html', {'templates': templates})
+
+@login_required
+def update_template_status(request, template_id):
+    if request.method == 'POST':
+        template = Template.objects.get(id=template_id)
+        new_status = request.POST.get('status')
+        if new_status in ['approved', 'rejected']:
+            template.status = new_status
+            template.save()
+            messages.success(request, f'Template {new_status} successfully.')
+    return redirect('review_templates')

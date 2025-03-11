@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Template Approval Settings</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="rejection_keywords" class="form-label">Rejection Keywords</label>
+                    <textarea class="form-control" id="rejection_keywords" name="rejection_keywords" rows="4" 
+                              placeholder="Enter keywords separated by commas">{{ settings.rejection_keywords|default:'' }}</textarea>
+                    <div class="form-text">Templates containing these words will be automatically rejected.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

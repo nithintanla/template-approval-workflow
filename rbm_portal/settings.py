@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'dashboard',
     'reviewer',  # Update the app name here
+    'approver',
 ]
 
 MIDDLEWARE = [

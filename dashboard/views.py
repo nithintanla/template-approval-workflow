@@ -26,11 +26,12 @@ def create_template(request):
             template = form.save(commit=False)
             template.created_by = request.user
             template.status = 'pending'  # Set status to 'pending'
-            template.save()
             approval_status, approval_message = TemplateApprovalService.check_approval(template.content)
+            template.templatestatus = 'approved' if approval_status else 'manual'
+            template.save()
             response_data = {
                 'message': 'Template sent for approval.',
-                'approval_status': 'pending',
+                'approval_status': 'approved' if approval_status else 'manual',
                 'approval_message': approval_message
             }
             return JsonResponse(response_data)

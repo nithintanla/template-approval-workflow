@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Manual Review Templates</h1>
+    
+    {% if templates %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Content</th>
+                    <th>Brand</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for template in templates %}
+                <tr>
+                    <td>{{ template.title }}</td>
+                    <td>{{ template.content }}</td>
+                    <td>{{ template.brand.name }}</td>
+                    <td>{{ template.created_by.username }}</td>
+                    <td>
+                        <form method="post" action="{% url 'update_template_status' template.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="approved">
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                        <form method="post" action="{% url 'update_template_status' template.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="rejected">
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">No templates pending manual review.</div>
+    {% endif %}
+</div>
+{% endblock %}

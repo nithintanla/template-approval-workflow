@@ -2,5 +2,3 @@ Django==4.2.7
 django-crispy-forms==2.1
 crispy-bootstrap5==2023.10
 python-dotenv==1.0.0
-plotly==5.18.0
-pandas==2.1.3

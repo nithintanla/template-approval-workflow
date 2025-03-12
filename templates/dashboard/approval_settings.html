@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
 
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4">Template Approval Settings</h1>
+    <h1 class="mb-4">Approval Settings</h1>
     
     <div class="card">
         <div class="card-body">
@@ -10,11 +11,20 @@
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="rejection_keywords" class="form-label">Rejection Keywords</label>
-                    <textarea class="form-control" id="rejection_keywords" name="rejection_keywords" rows="4" 
-                              placeholder="Enter keywords separated by commas">{{ settings.rejection_keywords|default:'' }}</textarea>
-                    <div class="form-text">Templates containing these words will be automatically rejected.</div>
+                    <textarea class="form-control" id="rejection_keywords" name="rejection_keywords" rows="3">{{ settings.rejection_keywords }}</textarea>
+                    <div class="form-text">Enter keywords separated by commas. Templates containing these words will be rejected.</div>
                 </div>
-                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <div class="mb-3">
+                    <label for="keywords_approve" class="form-label">Approval Keywords</label>
+                    <textarea class="form-control" id="keywords_approve" name="keywords_approve" rows="3">{{ settings.keywords_approve }}</textarea>
+                    <div class="form-text">Enter keywords separated by commas. Templates containing these words will be approved automatically.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="keywords_manual" class="form-label">Manual Approval Keywords</label>
+                    <textarea class="form-control" id="keywords_manual" name="keywords_manual" rows="3">{{ settings.keywords_manual }}</textarea>
+                    <div class="form-text">Enter keywords separated by commas. Templates containing these words will be sent for manual approval.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
             </form>
         </div>
     </div>

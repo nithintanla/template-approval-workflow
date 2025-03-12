@@ -16,22 +16,22 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="template-list">
                         {% for template in templates %}
-                        <tr>
+                        <tr id="template-{{ template.id }}">
                             <td>{{ template.title }}</td>
                             <td>{{ template.brand.name }}</td>
                             <td>{{ template.message_type }}</td>
                             <td>{{ template.get_status_display }}</td>
                             <td>{{ template.created_at }}</td>
                             <td>
-                                <form method="post" action="{% url 'update_template_status' template.id %}">
+                                <form method="post" class="update-status-form" data-template-id="{{ template.id }}">
                                     {% csrf_token %}
                                     <select name="status">
                                         <option value="approved">Approve</option>
                                         <option value="rejected">Reject</option>
                                     </select>
-                                    <button type="submit" class="btn btn-primary">Update</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
                                 </form>
                             </td>
                         </tr>
@@ -42,4 +42,34 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.update-status-form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const templateId = form.getAttribute('data-template-id');
+            const formData = new FormData(form);
+            fetch(`/approver/update_template_status/${templateId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById(`template-${templateId}`).remove();
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+});
+</script>
 {% endblock %}

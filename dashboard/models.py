@@ -11,10 +11,9 @@ class Brand(models.Model):
 
 class Template(models.Model):
     STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('pending', 'Pending Approval'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
+        ('pending', 'Pending for Approval'),
+        ('approved_system', 'Approved by System'),
+        ('approved_admin', 'Approved by Admin'),
     ]
 
     MESSAGE_TYPES = [
@@ -25,10 +24,9 @@ class Template(models.Model):
 
     title = models.CharField(max_length=200)
     content = models.TextField()
-    variables = models.JSONField(default=dict, blank=True)
+    variables = models.TextField(blank=True)  # Allow any string without JSON validation
     message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-    templatestatus = models.CharField(max_length=20, default='pending')  # New field
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -60,6 +58,14 @@ class ApprovalSettings(models.Model):
     rejection_keywords = models.TextField(
         help_text="Enter keywords separated by commas. Templates containing these words will be rejected."
     )
+    keywords_approve = models.TextField(
+        help_text="Enter keywords separated by commas. Templates containing these words will be approved automatically.",
+        default=""
+    )
+    keywords_manual = models.TextField(
+        help_text="Enter keywords separated by commas. Templates containing these words will be sent for manual approval.",
+        default=""
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -67,5 +73,5 @@ class ApprovalSettings(models.Model):
         verbose_name = "Approval Settings"
         verbose_name_plural = "Approval Settings"
 
-    def get_keywords_list(self):
-        return [k.strip().lower() for k in self.rejection_keywords.split(',') if k.strip()]
+    def get_keywords_list(self, field_name):
+        return [k.strip().lower() for k in getattr(self, field_name).split(',') if k.strip()]

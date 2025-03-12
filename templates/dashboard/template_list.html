@@ -15,6 +15,7 @@
                             <th>Brand</th>
                             <th>Type</th>
                             <th>Status</th>
+                            <!-- Remove Approval Status column -->
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
@@ -29,6 +30,7 @@
                                 <span class="status-indicator status-{{ template.status }}"></span>
                                 {{ template.get_status_display }}
                             </td>
+                            <!-- Remove Approval Status field -->
                             <td>{{ template.created_at }}</td>
                             <td>
                                 <!-- Add actions if needed -->

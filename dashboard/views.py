@@ -26,15 +26,21 @@ def create_template(request):
             template = form.save(commit=False)
             template.created_by = request.user
             template.status = 'pending'  # Set status to 'pending'
-            approval_status, approval_message = TemplateApprovalService.check_approval(template.content)
-            template.templatestatus = 'approved' if approval_status else 'manual'
+            try:
+                approval_status, approval_message = TemplateApprovalService.check_approval(template.content)
+                if approval_status:
+                    template.status = 'approved_system'
+                elif "manual approval" in approval_message:
+                    template.status = 'pending'  # Keep status as 'pending' for manual approval
+                else:
+                    template.status = 'rejected'
+            except ApprovalSettings.DoesNotExist:
+                approval_message = "Approval settings not configured. Template saved as pending."
             template.save()
-            response_data = {
-                'message': 'Template sent for approval.',
-                'approval_status': 'approved' if approval_status else 'manual',
-                'approval_message': approval_message
-            }
-            return JsonResponse(response_data)
+            messages.success(request, approval_message)
+            return redirect('template_list')
+        else:
+            messages.error(request, 'There was an error with your submission.')
     else:
         form = TemplateForm()
     return render(request, 'dashboard/create_template.html', {'form': form})
@@ -48,12 +54,20 @@ def template_list(request):
 def approval_settings(request):
     settings = ApprovalSettings.objects.latest('created_at') if ApprovalSettings.objects.exists() else None
     if request.method == 'POST':
-        keywords = request.POST.get('rejection_keywords', '')
+        rejection_keywords = request.POST.get('rejection_keywords', '')
+        keywords_approve = request.POST.get('keywords_approve', '')
+        keywords_manual = request.POST.get('keywords_manual', '')
         if settings:
-            settings.rejection_keywords = keywords
+            settings.rejection_keywords = rejection_keywords
+            settings.keywords_approve = keywords_approve
+            settings.keywords_manual = keywords_manual
             settings.save()
         else:
-            settings = ApprovalSettings.objects.create(rejection_keywords=keywords)
+            settings = ApprovalSettings.objects.create(
+                rejection_keywords=rejection_keywords,
+                keywords_approve=keywords_approve,
+                keywords_manual=keywords_manual
+            )
         messages.success(request, 'Approval settings updated successfully.')
         return redirect('approval_settings')
     return render(request, 'dashboard/approval_settings.html', {'settings': settings})
@@ -68,10 +82,10 @@ def update_template_status(request, template_id):
     if request.method == 'POST':
         template = Template.objects.get(id=template_id)
         new_status = request.POST.get('status')
-        if new_status in ['approved', 'rejected']:
+        if new_status in ['approved_system', 'approved_admin']:
             template.status = new_status
             template.save()
-            messages.success(request, f'Template {new_status} successfully.')
+            messages.success(request, f'Template {new_status.replace("_", " ")} successfully.')
     return redirect('review_templates')
 
 @login_required

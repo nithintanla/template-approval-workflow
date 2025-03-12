@@ -2,6 +2,10 @@
 {% block content %}
 <div class="container-fluid">
     <h1 class="mb-4">Review Templates</h1>
+    
+    <!-- Status message div -->
+    <div id="status-message" class="alert" style="display: none;"></div>
+    
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
@@ -9,29 +13,27 @@
                     <thead>
                         <tr>
                             <th>Title</th>
+                            <th>Content</th>
                             <th>Brand</th>
                             <th>Type</th>
-                            <th>Status</th>
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="template-list">
                         {% for template in templates %}
-                        <tr id="template-{{ template.id }}">
+                        <tr id="template-row-{{ template.id }}">
                             <td>{{ template.title }}</td>
+                            <td>{{ template.content }}</td>
                             <td>{{ template.brand.name }}</td>
                             <td>{{ template.message_type }}</td>
-                            <td>{{ template.get_status_display }}</td>
                             <td>{{ template.created_at }}</td>
                             <td>
-                                <form method="post" class="update-status-form" data-template-id="{{ template.id }}">
+                                <form class="update-status-form" data-template-id="{{ template.id }}">
                                     {% csrf_token %}
-                                    <select name="status">
-                                        <option value="approved">Approve</option>
-                                        <option value="rejected">Reject</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                                    <input type="hidden" name="status" value="">
+                                    <button type="submit" class="btn btn-success btn-sm" data-status="approved">Approve</button>
+                                    <button type="submit" class="btn btn-danger btn-sm" data-status="rejected">Reject</button>
                                 </form>
                             </td>
                         </tr>
@@ -46,28 +48,57 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const forms = document.querySelectorAll('.update-status-form');
+    const statusMessage = document.getElementById('status-message');
+
     forms.forEach(form => {
         form.addEventListener('submit', function(event) {
             event.preventDefault();
-            const templateId = form.getAttribute('data-template-id');
-            const formData = new FormData(form);
+            const templateId = this.getAttribute('data-template-id');
+            const clickedButton = event.submitter;
+            const status = clickedButton.getAttribute('data-status');
+            
+            // Set the hidden input value before submitting
+            this.querySelector('input[name="status"]').value = status;
+            
+            const formData = new FormData(this);
+            
+            console.log('Sending status:', status);
+            
             fetch(`/approver/update_template_status/${templateId}/`, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Response:', data);
                 if (data.status === 'success') {
-                    document.getElementById(`template-${templateId}`).remove();
-                    alert(data.message);
+                    const row = document.getElementById(`template-row-${data.template_id}`);
+                    if (row) {
+                        row.remove();
+                    }
+                    
+                    statusMessage.className = 'alert alert-success';
+                    statusMessage.style.display = 'block';
+                    statusMessage.textContent = data.message;
+                    
+                    setTimeout(() => {
+                        statusMessage.style.display = 'none';
+                    }, 3000);
                 } else {
-                    alert(data.message);
+                    statusMessage.className = 'alert alert-danger';
+                    statusMessage.style.display = 'block';
+                    statusMessage.textContent = data.message;
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                statusMessage.className = 'alert alert-danger';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = 'An error occurred while processing your request';
+            });
         });
     });
 });

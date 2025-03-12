@@ -3,26 +3,34 @@ from .models import ApprovalSettings
 class TemplateApprovalService:
     @staticmethod
     def check_approval(content):
-        """
-        Check template against configured rejection keywords
-        Returns: (approved: bool, message: str)
-        """
-        settings = ApprovalSettings.objects.latest('created_at')
-        rejection_keywords = settings.get_keywords_list('rejection_keywords')
-        keywords_approve = settings.get_keywords_list('keywords_approve')
-        keywords_manual = settings.get_keywords_list('keywords_manual')
-        content = content.lower()
-        
-        for keyword in rejection_keywords:
-            if keyword in content:
-                return False, f"Template rejected - contains word: {keyword}"
-        
-        for keyword in keywords_approve:
-            if keyword in content:
-                return True, "Template approved automatically"
-        
-        for keyword in keywords_manual:
-            if keyword in content:
-                return False, f"Template sent for manual approval - contains word: {keyword}"
-        
-        return False, "Template sent for manual approval (no matching keywords)"
+        try:
+            settings = ApprovalSettings.objects.latest('created_at')
+            
+            # Convert content to lowercase for case-insensitive matching
+            content_lower = content.lower()
+            
+            # Get keywords lists
+            rejection_keywords = [k.strip().lower() for k in settings.rejection_keywords.split(',') if k.strip()]
+            approval_keywords = [k.strip().lower() for k in settings.keywords_approve.split(',') if k.strip()]
+            manual_keywords = [k.strip().lower() for k in settings.keywords_manual.split(',') if k.strip()]
+            
+            # Check rejection keywords first
+            for keyword in rejection_keywords:
+                if keyword in content_lower:
+                    return 'rejected', f"Template rejected - contains keyword: {keyword}"
+            
+            # Check auto-approval keywords
+            for keyword in approval_keywords:
+                if keyword in content_lower:
+                    return 'approved', "Template automatically approved"
+            
+            # Check manual approval keywords
+            for keyword in manual_keywords:
+                if keyword in content_lower:
+                    return 'pending', f"Template requires manual approval - contains keyword: {keyword}"
+            
+            # Default case: send for manual approval
+            return 'pending', "Template requires manual approval"
+            
+        except ApprovalSettings.DoesNotExist:
+            return 'pending', "No approval settings found - defaulting to manual approval"

@@ -25,19 +25,13 @@ def create_template(request):
         if form.is_valid():
             template = form.save(commit=False)
             template.created_by = request.user
-            template.status = 'pending'  # Set status to 'pending'
-            try:
-                approval_status, approval_message = TemplateApprovalService.check_approval(template.content)
-                if approval_status:
-                    template.status = 'approved_system'
-                elif "manual approval" in approval_message:
-                    template.status = 'pending'  # Keep status as 'pending' for manual approval
-                else:
-                    template.status = 'rejected'
-            except ApprovalSettings.DoesNotExist:
-                approval_message = "Approval settings not configured. Template saved as pending."
+            
+            # Check template content against keywords
+            status, message = TemplateApprovalService.check_approval(template.content)
+            template.status = status
             template.save()
-            messages.success(request, approval_message)
+            
+            messages.success(request, message)
             return redirect('template_list')
         else:
             messages.error(request, 'There was an error with your submission.')

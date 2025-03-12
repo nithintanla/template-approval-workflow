@@ -1,22 +1,39 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.http import JsonResponse
 from dashboard.models import Template
 
 @login_required
 def review_templates(request):
-    templates = Template.objects.filter(status='pending')  # Filter templates with status 'pending'
+    # Only show templates with 'pending' status
+    templates = Template.objects.filter(status='pending').order_by('-created_at')
     return render(request, 'approver/review_templates.html', {'templates': templates})
 
 @login_required
 def update_template_status(request, template_id):
     if request.method == 'POST':
-        template = Template.objects.get(id=template_id)
+        template = get_object_or_404(Template, id=template_id)
+        
+        # Debug the incoming data
+        print("POST data:", request.POST)  # Add this line to debug
         new_status = request.POST.get('status')
-        if new_status in ['approved', 'rejected']:
+        print("Status received:", new_status)  # Add this line to debug
+        
+        # Check if status is in valid choices
+        valid_statuses = ['approved', 'rejected']
+        if new_status in valid_statuses:
             template.status = new_status
             template.save()
-            return JsonResponse({'message': f'Template {new_status} successfully.', 'status': 'success'})
-        return JsonResponse({'message': 'Invalid status.', 'status': 'error'})
-    return JsonResponse({'message': 'Invalid request method.', 'status': 'error'})
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Template has been {new_status}',
+                'template_id': template_id
+            })
+        
+        return JsonResponse({
+            'status': 'error', 
+            'message': f'Invalid status: {new_status}. Must be one of {valid_statuses}'
+        })
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})

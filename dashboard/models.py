@@ -12,8 +12,8 @@ class Brand(models.Model):
 class Template(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending for Approval'),
-        ('approved_system', 'Approved by System'),
-        ('approved_admin', 'Approved by Admin'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
     ]
 
     MESSAGE_TYPES = [

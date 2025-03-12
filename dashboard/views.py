@@ -2,13 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Template, Brand, Analytics, Agent
-from .forms import TemplateForm
+from .models import Template, Brand, Analytics, Agent, ApprovalSettings
+from .forms import TemplateForm, BrandForm, AgentForm
 from .services import TemplateApprovalService
-import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import pandas as pd
 import json
 
 @login_required
@@ -28,23 +25,15 @@ def create_template(request):
         if form.is_valid():
             template = form.save(commit=False)
             template.created_by = request.user
-            template.status = 'pending'
+            template.status = 'pending'  # Set status to 'pending'
             template.save()
-            
-            # Check template approval
-            approved, message = TemplateApprovalService.check_approval(template.content)
-            if approved:
-                template.status = 'approved'
-            else:
-                template.status = 'rejected'
-            template.save()
-            
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Template submitted for approval',
-                'approval_status': template.status,
-                'approval_message': message
-            })
+            approval_status, approval_message = TemplateApprovalService.check_approval(template.content)
+            response_data = {
+                'message': 'Template sent for approval.',
+                'approval_status': 'pending',
+                'approval_message': approval_message
+            }
+            return JsonResponse(response_data)
     else:
         form = TemplateForm()
     return render(request, 'dashboard/create_template.html', {'form': form})
@@ -55,55 +44,8 @@ def template_list(request):
     return render(request, 'dashboard/template_list.html', {'templates': templates})
 
 @login_required
-def analytics(request):
-    # Get data for the last 7 days
-    end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=7)
-    
-    # Get analytics data
-    analytics_data = Analytics.objects.filter(
-        date__range=[start_date, end_date]
-    ).select_related('template')
-
-    # Convert to DataFrame for easier manipulation
-    df = pd.DataFrame(list(analytics_data.values('date', 'views', 'responses', 'template__title')))
-    
-    # Create views trend chart
-    views_fig = px.line(df, x='date', y='views', 
-                        title='Template Views Over Time',
-                        labels={'date': 'Date', 'views': 'Number of Views'})
-    views_chart = views_fig.to_html(full_html=False)
-
-    # Create response rate chart
-    df['response_rate'] = (df['responses'] / df['views'] * 100).round(2)
-    response_fig = px.bar(df, x='template__title', y='response_rate',
-                         title='Template Response Rates',
-                         labels={'template__title': 'Template', 'response_rate': 'Response Rate (%)'})
-    response_chart = response_fig.to_html(full_html=False)
-
-    # Get agent performance data
-    agents = Agent.objects.select_related('brand').all()
-    agent_stats = []
-    for agent in agents:
-        templates_count = Template.objects.filter(brand=agent.brand).count()
-        agent_stats.append({
-            'name': agent.name,
-            'brand': agent.brand.name,
-            'templates': templates_count,
-            'active': '✓' if agent.is_active else '✗'
-        })
-
-    context = {
-        'views_chart': views_chart,
-        'response_chart': response_chart,
-        'agent_stats': agent_stats
-    }
-    return render(request, 'dashboard/analytics.html', context)
-
-@login_required
 def approval_settings(request):
     settings = ApprovalSettings.objects.latest('created_at') if ApprovalSettings.objects.exists() else None
-    
     if request.method == 'POST':
         keywords = request.POST.get('rejection_keywords', '')
         if settings:
@@ -113,7 +55,6 @@ def approval_settings(request):
             settings = ApprovalSettings.objects.create(rejection_keywords=keywords)
         messages.success(request, 'Approval settings updated successfully.')
         return redirect('approval_settings')
-        
     return render(request, 'dashboard/approval_settings.html', {'settings': settings})
 
 @login_required
@@ -131,3 +72,55 @@ def update_template_status(request, template_id):
             template.save()
             messages.success(request, f'Template {new_status} successfully.')
     return redirect('review_templates')
+
+@login_required
+def analytics(request):
+    # Get data for the last 7 days
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=7)
+    # Get analytics data
+    analytics_data = Analytics.objects.filter(
+        date__range=[start_date, end_date]
+    ).select_related('template')
+    context = {
+        'analytics_data': analytics_data,
+    }
+    return render(request, 'dashboard/analytics.html', context)
+
+@login_required
+def brand_list(request):
+    brands = Brand.objects.all()
+    return render(request, 'dashboard/brand_list.html', {'brands': brands})
+
+@login_required
+def create_brand(request):
+    if request.method == 'POST':
+        form = BrandForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Brand created successfully.')
+            return redirect('brand_list')
+    else:
+        form = BrandForm()
+    return render(request, 'dashboard/create_brand.html', {'form': form})
+
+@login_required
+def agent_list(request):
+    agents = Agent.objects.all()
+    return render(request, 'dashboard/agent_list.html', {'agents': agents})
+
+@login_required
+def create_agent(request):
+    if request.method == 'POST':
+        form = AgentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Agent created successfully.')
+            return redirect('agent_list')
+    else:
+        form = AgentForm()
+    return render(request, 'dashboard/create_agent.html', {'form': form})
+
+def send_template_to_admin_for_approval(template):
+    # Logic to send the template to the admin app for approval
+    pass

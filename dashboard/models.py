@@ -28,6 +28,7 @@ class Template(models.Model):
     variables = models.JSONField(default=dict, blank=True)
     message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    templatestatus = models.CharField(max_length=20, default='pending')  # New field
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)

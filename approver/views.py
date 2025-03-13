@@ -20,14 +20,14 @@ def update_template_status(request, template_id):
         print("Status received:", new_status)  # Add this line to debug
         
         # Check if status is in valid choices
-        valid_statuses = ['approved', 'rejected']
+        valid_statuses = ['approved_admin', 'rejected_admin']
         if new_status in valid_statuses:
             template.status = new_status
             template.save()
             
             return JsonResponse({
                 'status': 'success',
-                'message': f'Template has been {new_status}',
+                'message': f'Template has been {new_status.replace("_", " ")}',
                 'template_id': template_id
             })
         

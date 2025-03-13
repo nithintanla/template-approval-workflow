@@ -17,12 +17,12 @@ class TemplateApprovalService:
             # Check rejection keywords first
             for keyword in rejection_keywords:
                 if keyword in content_lower:
-                    return 'rejected', f"Template rejected - contains keyword: {keyword}"
+                    return 'rejected_system', f"Template rejected - contains keyword: {keyword}"
             
             # Check auto-approval keywords
             for keyword in approval_keywords:
                 if keyword in content_lower:
-                    return 'approved', "Template automatically approved"
+                    return 'approved_system', "Template automatically approved"
             
             # Check manual approval keywords
             for keyword in manual_keywords:

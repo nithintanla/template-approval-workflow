@@ -58,9 +58,9 @@
     margin-right: 5px;
 }
 
-.status-approved { background-color: #28a745; }
+.status-approved { background-color: #28a745; } /* Green dot for all approved statuses */
+.status-rejected { background-color: #dc3545; } /* Red dot for all rejected statuses */
 .status-pending { background-color: #ffc107; }
-.status-rejected { background-color: #dc3545; }
 .status-draft { background-color: #6c757d; }
 
 /* Modal styles */

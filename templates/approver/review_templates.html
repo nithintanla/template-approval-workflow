@@ -32,8 +32,8 @@
                                 <form class="update-status-form" data-template-id="{{ template.id }}">
                                     {% csrf_token %}
                                     <input type="hidden" name="status" value="">
-                                    <button type="submit" class="btn btn-success btn-sm" data-status="approved">Approve</button>
-                                    <button type="submit" class="btn btn-danger btn-sm" data-status="rejected">Reject</button>
+                                    <button type="submit" class="btn btn-success btn-sm" data-status="approved_admin">Approve</button>
+                                    <button type="submit" class="btn btn-danger btn-sm" data-status="rejected_admin">Reject</button>
                                 </form>
                             </td>
                         </tr>

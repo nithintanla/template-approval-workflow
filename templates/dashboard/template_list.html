@@ -1,10 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Templates</h1>
-        <a href="{% url 'create_template' %}" class="btn btn-primary">Create Template</a>
-    </div>
+    <h1 class="mb-4">Templates</h1>
+    <a href="{% url 'create_template' %}" class="btn btn-primary mb-4">Create Template</a>
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
@@ -14,8 +12,8 @@
                             <th>Title</th>
                             <th>Brand</th>
                             <th>Type</th>
+                            <th>Description</th>
                             <th>Status</th>
-                            <!-- Remove Approval Status column -->
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
@@ -26,11 +24,19 @@
                             <td>{{ template.title }}</td>
                             <td>{{ template.brand.name }}</td>
                             <td>{{ template.message_type }}</td>
+                            <td>{{ template.content|truncatewords:10 }}</td>
                             <td>
-                                <span class="status-indicator status-{{ template.status }}"></span>
+                                <span class="status-indicator 
+                                    {% if template.status == 'approved_system' or template.status == 'approved_admin' %}
+                                        status-approved
+                                    {% elif template.status == 'rejected_system' or template.status == 'rejected_admin' %}
+                                        status-rejected
+                                    {% else %}
+                                        status-{{ template.status }}
+                                    {% endif %}
+                                "></span>
                                 {{ template.get_status_display }}
                             </td>
-                            <!-- Remove Approval Status field -->
                             <td>{{ template.created_at }}</td>
                             <td>
                                 <!-- Add actions if needed -->

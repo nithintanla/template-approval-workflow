@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Template, Brand, Analytics, Agent, ApprovalSettings
+from .models import Template, Brand, Agent, ApprovalSettings
 from .forms import TemplateForm, BrandForm, AgentForm
 from .services import TemplateApprovalService
 from datetime import datetime, timedelta
@@ -12,9 +12,11 @@ import json
 def dashboard(request):
     templates = Template.objects.all()
     brands = Brand.objects.all()
+    agents = Agent.objects.all()
     context = {
         'templates': templates,
         'brands': brands,
+        'agents': agents,
     }
     return render(request, 'dashboard/dashboard.html', context)
 
@@ -68,7 +70,7 @@ def approval_settings(request):
 
 @login_required
 def review_templates(request):
-    templates = Template.objects.filter(status='rejected')
+    templates = Template.objects.filter(status__in=['rejected_system', 'rejected_admin'])
     return render(request, 'dashboard/review_templates.html', {'templates': templates})
 
 @login_required
@@ -76,25 +78,11 @@ def update_template_status(request, template_id):
     if request.method == 'POST':
         template = Template.objects.get(id=template_id)
         new_status = request.POST.get('status')
-        if new_status in ['approved_system', 'approved_admin']:
+        if new_status in ['approved_admin', 'rejected_admin']:
             template.status = new_status
             template.save()
             messages.success(request, f'Template {new_status.replace("_", " ")} successfully.')
     return redirect('review_templates')
-
-@login_required
-def analytics(request):
-    # Get data for the last 7 days
-    end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=7)
-    # Get analytics data
-    analytics_data = Analytics.objects.filter(
-        date__range=[start_date, end_date]
-    ).select_related('template')
-    context = {
-        'analytics_data': analytics_data,
-    }
-    return render(request, 'dashboard/analytics.html', context)
 
 @login_required
 def brand_list(request):

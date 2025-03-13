@@ -11,9 +11,10 @@ class Brand(models.Model):
 
 class Template(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending for Approval'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
+        ('approved_system', 'Approved by System'),
+        ('rejected_system', 'Rejected by System'),
+        ('approved_admin', 'Approved by Admin'),
+        ('rejected_admin', 'Rejected by Admin'),
     ]
 
     MESSAGE_TYPES = [
@@ -26,7 +27,7 @@ class Template(models.Model):
     content = models.TextField()
     variables = models.TextField(blank=True)  # Allow any string without JSON validation
     message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved_system')
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -44,15 +45,6 @@ class Agent(models.Model):
 
     def __str__(self):
         return self.name
-
-class Analytics(models.Model):
-    template = models.ForeignKey(Template, on_delete=models.CASCADE)
-    views = models.IntegerField(default=0)
-    responses = models.IntegerField(default=0)
-    date = models.DateField(auto_now_add=True)
-
-    class Meta:
-        verbose_name_plural = "Analytics"
 
 class ApprovalSettings(models.Model):
     rejection_keywords = models.TextField(

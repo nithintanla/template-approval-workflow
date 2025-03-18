@@ -4,11 +4,112 @@
 {% block content %}
 <div class="container">
     <h1>Create Template</h1>
-    <form method="post">
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <div class="text-white text-center">
+                <div class="spinner-border" role="status"></div>
+                <p class="mt-2">Analyzing template content...</p>
+            </div>
+        </div>
+    </div>
+
+    <form id="template-form" method="post">
         {% csrf_token %}
         {{ form|crispy }}
-        <button type="submit" class="btn btn-primary">Create Template</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Create Template</button>
         <a href="{% url 'template_list' %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
+
+<script>
+document.getElementById('template-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show loading overlay
+    document.getElementById('loading-overlay').style.display = 'block';
+    
+    // Disable submit button
+    document.getElementById('submit-btn').disabled = true;
+    
+    // Submit form via AJAX
+    fetch(window.location.href, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            let explanation = data.explanation;
+            let useKeywords = explanation.includes('falling back to keyword') || 
+                            explanation.includes('OpenAI unavailable');
+            
+            let icon = data.decision === 'Approve' ? 'success' : 
+                      data.decision === 'Reject' ? 'error' : 'warning';
+            
+            let title = data.decision === 'Manual' ? 
+                       'Manual Review Required' : 
+                       `Template ${data.decision}d`;
+            
+            Swal.fire({
+                title: title,
+                html: `
+                    <div class="text-left">
+                        <p><strong>Decision:</strong> ${data.decision}</p>
+                        <p><strong>Method:</strong> ${useKeywords ? 'Keyword Analysis' : 'AI Analysis'}</p>
+                        <p><strong>Reason:</strong> ${data.explanation}</p>
+                        ${data.decision === 'Manual' ? 
+                          '<p class="text-info">The template will be sent for manual review.</p>' : ''}
+                        ${useKeywords ? '<p class="text-warning"><small>Note: Using keyword-based analysis due to OpenAI API issues.</small></p>' : ''}
+                    </div>
+                `,
+                icon: icon,
+                showConfirmButton: true
+            }).then(() => {
+                window.location.href = data.redirect_url;
+            });
+        } else {
+            Swal.fire({
+                title: 'Processing Error',
+                html: `
+                    <div class="text-left">
+                        <p>An error occurred while processing the template.</p>
+                        <p class="text-danger"><strong>Error:</strong> ${data.errors || 'Unknown error occurred'}</p>
+                        <p class="text-warning">Using keyword-based analysis as fallback.</p>
+                        <p>The template will be processed using keyword rules.</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showConfirmButton: true
+            }).then(() => {
+                window.location.href = data.redirect_url;
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'System Error',
+            html: `
+                <div class="text-left">
+                    <p>An unexpected error occurred while processing your template.</p>
+                    <p class="text-danger"><strong>Error:</strong> ${error.message}</p>
+                    <p>The template will be sent for manual review.</p>
+                </div>
+            `,
+            icon: 'error',
+            showConfirmButton: true
+        });
+    })
+    .finally(() => {
+        // Hide loading overlay and enable submit button
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('submit-btn').disabled = false;
+    });
+});
+</script>
 {% endblock %}

@@ -89,3 +89,8 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# OpenAI Configuration
+# Change API key and model to use environment variables with defaults
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')  # Get API key from environment variable
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4')  # Default to gpt-4 if not specified

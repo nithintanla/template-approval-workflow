@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.urls import reverse  # Add this import
 from .models import Template, Brand, Agent, ApprovalSettings
 from .forms import TemplateForm, BrandForm, AgentForm
-from .services import TemplateApprovalService
+from .services import TemplateApprovalService, TemplateModeration
 from datetime import datetime, timedelta
 import json
 
@@ -28,15 +29,26 @@ def create_template(request):
             template = form.save(commit=False)
             template.created_by = request.user
             
-            # Check template content against keywords
-            status, message = TemplateApprovalService.check_approval(template.content)
-            template.status = status
+            # Get content moderation decision
+            decision, explanation = TemplateModeration.analyze_content(template.content)
+            
+            # Set template status based on decision
+            status_mapping = {
+                'Approve': 'approved_system',
+                'Reject': 'rejected_system',
+                'Manual': 'pending'
+            }
+            template.status = status_mapping.get(decision, 'pending')
             template.save()
             
-            messages.success(request, message)
-            return redirect('template_list')
+            return JsonResponse({
+                'status': 'success',
+                'decision': decision,
+                'explanation': explanation,
+                'redirect_url': reverse('template_list')
+            })
         else:
-            messages.error(request, 'There was an error with your submission.')
+            return JsonResponse({'status': 'error', 'errors': form.errors})
     else:
         form = TemplateForm()
     return render(request, 'dashboard/create_template.html', {'form': form})

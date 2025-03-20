@@ -4,28 +4,15 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Create New Agent</h4>
+                <div class="card-header">
+                    <h5 class="mb-0">Edit Agent</h5>
                 </div>
                 <div class="card-body">
-                    <form method="post" class="needs-validation" novalidate>
+                    <form method="post">
                         {% csrf_token %}
                         
-                        {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <h5>Please correct the following errors:</h5>
-                            <ul>
-                                {% for field, errors in form.errors.items %}
-                                    {% for error in errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-
                         <div class="mb-3">
-                            <label for="{{ form.name.id_for_label }}" class="form-label">Agent Name</label>
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
                             {{ form.name }}
                             {% if form.name.errors %}
                             <div class="invalid-feedback d-block">
@@ -42,7 +29,6 @@
                                 {{ form.email.errors.0 }}
                             </div>
                             {% endif %}
-                            <div class="form-text">Enter a valid email address for the agent.</div>
                         </div>
 
                         <div class="mb-3">
@@ -53,7 +39,6 @@
                                 {{ form.brand.errors.0 }}
                             </div>
                             {% endif %}
-                            <div class="form-text">Select the brand this agent will be associated with.</div>
                         </div>
 
                         <div class="mb-3">
@@ -63,16 +48,11 @@
                                     Active Status
                                 </label>
                             </div>
-                            <div class="form-text">Check this box to make the agent active immediately.</div>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Create Agent
-                            </button>
-                            <a href="{% url 'agent_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-times me-2"></i>Cancel
-                            </a>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'agent_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -80,23 +60,4 @@
         </div>
     </div>
 </div>
-
-{% block extra_js %}
-<script>
-// Form validation
-(function () {
-    'use strict'
-    var forms = document.querySelectorAll('.needs-validation')
-    Array.prototype.slice.call(forms).forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-            form.classList.add('was-validated')
-        }, false)
-    })
-})()
-</script>
-{% endblock %}
-{% endblock %}
+{% endblock %} 

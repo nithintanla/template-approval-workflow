@@ -1,6 +1,14 @@
 :root {
-    --primary-color: #6f42c1;
-    --secondary-color: #563d7c;
+    --primary-color: #602C7D;
+    --secondary-color: #8A4BAF;
+    --background-color: #F8F9FA;
+    --border-color: #E9ECEF;
+    --text-color: #495057;
+}
+
+body {
+    background-color: var(--background-color);
+    font-family: 'Inter', sans-serif;
 }
 
 .wrapper {
@@ -9,15 +17,15 @@
 }
 
 #sidebar {
+    background: var(--primary-color);
     min-width: 250px;
     max-width: 250px;
     min-height: 100vh;
-    background: var(--primary-color);
     color: #fff;
     transition: all 0.3s;
 }
 
-#sidebar .sidebar-header {
+.sidebar-header {
     padding: 20px;
     background: var(--secondary-color);
 }
@@ -44,10 +52,29 @@
     min-height: 100vh;
 }
 
-.card {
+.table {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.table thead th {
+    background: #F8F9FA;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.filters-section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
     margin-bottom: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.filter-item {
+    margin-right: 15px;
 }
 
 .status-indicator {
@@ -55,13 +82,54 @@
     height: 10px;
     border-radius: 50%;
     display: inline-block;
-    margin-right: 5px;
+    margin-right: 8px;
 }
 
-.status-approved { background-color: #28a745; } /* Green dot for all approved statuses */
-.status-rejected { background-color: #dc3545; } /* Red dot for all rejected statuses */
-.status-pending { background-color: #ffc107; }
-.status-draft { background-color: #6c757d; }
+.status-pending {
+    background-color: #FFC107;
+}
+
+.status-approved {
+    background-color: #28A745;
+}
+
+.status-rejected {
+    background-color: #DC3545;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.stats-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stats-number {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
 
 /* Modal styles */
 .modal .status-message {
@@ -84,4 +152,51 @@
 
 .modal-body {
     padding: 20px;
+}
+
+/* Add these to your existing CSS */
+.filter-bar {
+    background: white;
+    border: 1px solid var(--border-color);
+}
+
+.filter-group label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.form-select-sm, .form-control-sm {
+    border-color: #dee2e6;
+    background-color: #fff;
+}
+
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+.table th {
+    font-weight: 500;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
 }

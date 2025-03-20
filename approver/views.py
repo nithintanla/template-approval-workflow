@@ -1,17 +1,58 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from dashboard.models import Template
+from dashboard.models import Template, Brand
+from django.contrib import messages
 
 @login_required
 def review_templates(request):
+    # Get filter parameters
+    brand_id = request.GET.get('brand')
+    message_type = request.GET.get('message_type')
+    status = request.GET.get('status')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+
+    # Base queryset
     if request.user.username == 'l1approver':
-        templates = Template.objects.filter(status='pending').order_by('-created_at')
+        templates = Template.objects.filter(status='pending_l1')
     elif request.user.username == 'l2approver':
-        templates = Template.objects.filter(status='approved_l1').order_by('-created_at')
+        templates = Template.objects.filter(status='approved_l1')
     else:
-        templates = Template.objects.none()  # No access for other users
-    return render(request, 'approver/review_templates.html', {'templates': templates})
+        templates = Template.objects.none()
+
+    # Apply filters
+    if brand_id:
+        templates = templates.filter(brand_id=brand_id)
+    if message_type:
+        templates = templates.filter(message_type=message_type)
+    if status:
+        templates = templates.filter(status=status)
+    if date_from:
+        templates = templates.filter(created_at__gte=date_from)
+    if date_to:
+        templates = templates.filter(created_at__lte=date_to)
+
+    # Order by latest first
+    templates = templates.order_by('-created_at')
+
+    # Get counts for stats
+    context = {
+        'templates': templates,
+        'brands': Brand.objects.all(),
+        'status_choices': Template.STATUS_CHOICES,
+        'pending_count': Template.objects.filter(status='pending_l1').count(),
+        'approved_count': Template.objects.filter(status__in=['approved_l1', 'approved_l2']).count(),
+        'rejected_count': Template.objects.filter(status__in=['rejected_l1', 'rejected_l2']).count(),
+        'total_count': Template.objects.count(),
+        'selected_brand': brand_id,
+        'selected_type': message_type,
+        'selected_status': status,
+        'selected_date_from': date_from,
+        'selected_date_to': date_to,
+    }
+
+    return render(request, 'approver/review_templates.html', context)
 
 @login_required
 def update_template_status(request, template_id):
@@ -44,51 +85,38 @@ def update_template_status(request, template_id):
 
 @login_required
 def approve_l1(request, template_id):
-    if request.method == 'POST':
+    if request.method == 'POST' and request.user.username == 'l1approver':
         template = get_object_or_404(Template, id=template_id)
-        new_status = request.POST.get('status')
-        if new_status == 'approved_l1':
+        action = request.POST.get('action')
+        
+        if action == 'approve':
             template.status = 'approved_l1'
-            template.save()
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Template has been approved by L1 and sent for L2 approval',
-                'template_id': template_id
-            })
-        elif new_status == 'rejected_l1':
+            message = 'Template approved and sent for L2 review'
+        elif action == 'reject':
             template.status = 'rejected_l1'
-            template.save()
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Template has been rejected by L1',
-                'template_id': template_id
-            })
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid status for L1 approval'
-        })
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+            message = 'Template rejected by L1'
+        
+        template.save()
+        messages.success(request, message)
+        return JsonResponse({'status': 'success', 'message': message})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 @login_required
 def approve_l2(request, template_id):
-    if request.method == 'POST':
+    if request.method == 'POST' and request.user.username == 'l2approver':
         template = get_object_or_404(Template, id=template_id)
-        if template.status == 'approved_l1':
-            new_status = request.POST.get('status')
-            if new_status == 'approved_l2':
-                template.status = 'approved_l2'
-                template.save()
-                return JsonResponse({
-                    'status': 'success',
-                    'message': 'Template has been approved by L2',
-                    'template_id': template_id
-                })
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid status for L2 approval'
-            })
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Template must be approved by L1 first'
-        })
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+        action = request.POST.get('action')
+        
+        if action == 'approve':
+            template.status = 'approved_l2'
+            message = 'Template approved by L2'
+        elif action == 'reject':
+            template.status = 'rejected_l2'
+            message = 'Template rejected by L2'
+        
+        template.save()
+        messages.success(request, message)
+        return JsonResponse({'status': 'success', 'message': message})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

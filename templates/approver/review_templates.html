@@ -1,40 +1,175 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4">Review Templates</h1>
-    
-    <!-- Status message div -->
-    <div id="status-message" class="alert" style="display: none;"></div>
-    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Review Templates</h1>
+        <div class="d-flex align-items-center">
+            <span class="text-muted me-2">Total: {{ templates.count }}</span>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Brand</label>
+                <select name="brand" class="form-select">
+                    <option value="">All Brands</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if selected_brand == brand.id %}selected{% endif %}>
+                        {{ brand.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Message Type</label>
+                <select name="message_type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="text" {% if selected_type == 'text' %}selected{% endif %}>Text</option>
+                    <option value="media" {% if selected_type == 'media' %}selected{% endif %}>Media</option>
+                    <option value="card" {% if selected_type == 'card' %}selected{% endif %}>Card</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    {% for status in status_choices %}
+                    <option value="{{ status.0 }}" {% if selected_status == status.0 %}selected{% endif %}>
+                        {{ status.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date Range</label>
+                <input type="date" name="date_from" class="form-control" value="{{ selected_date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <input type="date" name="date_to" class="form-control" value="{{ selected_date_to }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'review_templates' %}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Pending Review</h6>
+                        <div class="stats-number">{{ pending_count }}</div>
+                    </div>
+                    <div class="text-warning">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Approved</h6>
+                        <div class="stats-number">{{ approved_count }}</div>
+                    </div>
+                    <div class="text-success">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Rejected</h6>
+                        <div class="stats-number">{{ rejected_count }}</div>
+                    </div>
+                    <div class="text-danger">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Total</h6>
+                        <div class="stats-number">{{ total_count }}</div>
+                    </div>
+                    <div class="text-primary">
+                        <i class="fas fa-layer-group fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Table -->
     <div class="card">
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>Title</th>
                             <th>Content</th>
                             <th>Brand</th>
                             <th>Type</th>
-                            <th>Created</th>
+                            <th>Created By</th>
+                            <th>Status</th>
+                            <th>Created At</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="template-list">
+                    <tbody>
                         {% for template in templates %}
                         <tr id="template-row-{{ template.id }}">
                             <td>{{ template.title }}</td>
-                            <td>{{ template.content }}</td>
+                            <td>{{ template.content|truncatechars:50 }}</td>
                             <td>{{ template.brand.name }}</td>
                             <td>{{ template.message_type }}</td>
-                            <td>{{ template.created_at }}</td>
+                            <td>{{ template.created_by.username }}</td>
                             <td>
-                                <form class="update-status-form" data-template-id="{{ template.id }}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="status" value="">
-                                    <button type="submit" class="btn btn-success btn-sm" data-status="approved_admin">Approve</button>
-                                    <button type="submit" class="btn btn-danger btn-sm" data-status="rejected_admin">Reject</button>
-                                </form>
+                                <span class="status-indicator status-{{ template.status }}"></span>
+                                {{ template.get_status_display }}
+                            </td>
+                            <td>{{ template.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if user.username == 'l1approver' and template.status == 'pending_l1' %}
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-success btn-sm approve-btn" 
+                                            data-template-id="{{ template.id }}" data-level="l1">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm reject-btn"
+                                            data-template-id="{{ template.id }}" data-level="l1">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {% elif user.username == 'l2approver' and template.status == 'approved_l1' %}
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-success btn-sm approve-btn"
+                                            data-template-id="{{ template.id }}" data-level="l2">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm reject-btn"
+                                            data-template-id="{{ template.id }}" data-level="l2">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -43,64 +178,96 @@
             </div>
         </div>
     </div>
+
+    <!-- Pagination -->
+    {% if templates.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if templates.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ templates.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for i in templates.paginator.page_range %}
+            <li class="page-item {% if templates.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+            {% endfor %}
+            
+            {% if templates.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ templates.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const forms = document.querySelectorAll('.update-status-form');
-    const statusMessage = document.getElementById('status-message');
-
+    const forms = document.querySelectorAll('.approval-form');
+    
     forms.forEach(form => {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const templateId = this.getAttribute('data-template-id');
-            const clickedButton = event.submitter;
-            const status = clickedButton.getAttribute('data-status');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const templateId = this.dataset.templateId;
+            const level = this.dataset.level;
+            const action = e.submitter.dataset.action;
+            const url = `/approver/approve_${level}/${templateId}/`;
             
-            // Set the hidden input value before submitting
-            this.querySelector('input[name="status"]').value = status;
-            
-            const formData = new FormData(this);
-            
-            console.log('Sending status:', status);
-            
-            fetch(`/approver/update_template_status/${templateId}/`, {
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            fetch(url, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
-                console.log('Response:', data);
                 if (data.status === 'success') {
-                    const row = document.getElementById(`template-row-${data.template_id}`);
-                    if (row) {
-                        row.remove();
-                    }
+                    // Remove the row after successful action
+                    document.getElementById(`template-row-${templateId}`).remove();
                     
-                    statusMessage.className = 'alert alert-success';
-                    statusMessage.style.display = 'block';
-                    statusMessage.textContent = data.message;
+                    // Show success message
+                    const messageDiv = document.getElementById('status-message');
+                    messageDiv.textContent = data.message;
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.style.display = 'block';
                     
+                    // Hide message after 3 seconds
                     setTimeout(() => {
-                        statusMessage.style.display = 'none';
+                        messageDiv.style.display = 'none';
                     }, 3000);
-                } else {
-                    statusMessage.className = 'alert alert-danger';
-                    statusMessage.style.display = 'block';
-                    statusMessage.textContent = data.message;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                statusMessage.className = 'alert alert-danger';
-                statusMessage.style.display = 'block';
-                statusMessage.textContent = 'An error occurred while processing your request';
+                const messageDiv = document.getElementById('status-message');
+                messageDiv.textContent = 'An error occurred while processing your request.';
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.style.display = 'block';
             });
         });
     });
 });
 </script>
+{% endblock %}
 {% endblock %}

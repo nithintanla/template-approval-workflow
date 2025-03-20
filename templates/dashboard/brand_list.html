@@ -1,17 +1,47 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4">Brands</h1>
-    <a href="{% url 'create_brand' %}" class="btn btn-primary mb-4">Create Brand</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Brands</h1>
+        <a href="{% url 'create_brand' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Create Brand
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-bar bg-white p-3 rounded mb-4 shadow-sm">
+        <form method="get" class="d-flex flex-wrap gap-3 align-items-end">
+            <div class="filter-group" style="min-width: 200px;">
+                <label class="form-label text-muted small mb-1">Search Brand</label>
+                <input type="text" name="search" class="form-control form-control-sm" 
+                       value="{{ request.GET.search }}" placeholder="Search by name...">
+            </div>
+
+            <div class="filter-group" style="min-width: 200px;">
+                <label class="form-label text-muted small mb-1">Date Range</label>
+                <input type="date" name="date_from" class="form-control form-control-sm" 
+                       value="{{ selected_date_from }}">
+            </div>
+
+            <div class="ms-auto">
+                <button type="submit" class="btn btn-primary btn-sm px-4">Apply</button>
+                <a href="{% url 'brand_list' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                    <i class="fas fa-redo-alt"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
     <div class="card">
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Created At</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -19,7 +49,12 @@
                         <tr>
                             <td>{{ brand.name }}</td>
                             <td>{{ brand.description }}</td>
-                            <td>{{ brand.created_at }}</td>
+                            <td>{{ brand.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

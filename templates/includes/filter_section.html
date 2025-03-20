@@ -1,0 +1,33 @@
+<div class="filter-bar bg-white p-3 rounded mb-4 shadow-sm">
+    <form method="get" class="d-flex flex-wrap gap-3 align-items-end">
+        {% if date_filter %}
+        <div class="filter-group" style="min-width: 200px;">
+            <label class="form-label text-muted small mb-1">As of Date</label>
+            <input type="date" name="date" class="form-control form-control-sm" value="{{ selected_date }}">
+        </div>
+        {% endif %}
+        
+        {% for filter in filters %}
+        <div class="filter-group" style="min-width: 200px;">
+            <label class="form-label text-muted small mb-1">{{ filter.label }}</label>
+            <select name="{{ filter.name }}" class="form-select form-select-sm">
+                <option value="">All {{ filter.label }}s</option>
+                {% for option in filter.options %}
+                <option value="{{ option.value }}" {% if option.value == filter.selected %}selected{% endif %}>
+                    {{ option.label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endfor %}
+
+        <div class="ms-auto">
+            <button type="submit" class="btn btn-primary btn-sm px-4">
+                Apply
+            </button>
+            <a href="{{ request.path }}" class="btn btn-outline-secondary btn-sm ms-2">
+                <i class="fas fa-redo-alt"></i>
+            </a>
+        </div>
+    </form>
+</div> 

@@ -11,10 +11,7 @@ class Brand(models.Model):
 
 class Template(models.Model):
     STATUS_CHOICES = [
-        ('approved_system', 'Approved by System'),
-        ('rejected_system', 'Rejected by System'),
-        ('approved_admin', 'Approved by Admin'),
-        ('rejected_admin', 'Rejected by Admin'),
+        ('pending_l1', 'Pending L1 Approval'),
         ('approved_l1', 'Approved by L1'),
         ('rejected_l1', 'Rejected by L1'),
         ('approved_l2', 'Approved by L2'),
@@ -31,7 +28,7 @@ class Template(models.Model):
     content = models.TextField()
     variables = models.TextField(blank=True)  # Allow any string without JSON validation
     message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved_system')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_l1')
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Delete Agent</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">Are you sure you want to delete the agent "{{ agent.name }}"? This action cannot be undone.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'agent_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete Agent</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

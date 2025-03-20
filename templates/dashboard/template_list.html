@@ -1,12 +1,90 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4">Templates</h1>
-    <a href="{% url 'create_template' %}" class="btn btn-primary mb-4">Create Template</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Templates</h1>
+        <a href="{% url 'create_template' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Create Template
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row d-flex gap-4 mb-4">
+        <div class="stat-card bg-white rounded p-3 flex-grow-1 shadow-sm">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small">Total Requests</div>
+                    <div class="h3 mb-0">{{ total_count }}</div>
+                </div>
+                <div class="stat-icon text-primary">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded p-3 flex-grow-1 shadow-sm">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small">Pending</div>
+                    <div class="h3 mb-0">{{ pending_count }}</div>
+                </div>
+                <div class="stat-icon text-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-bar bg-white p-3 rounded mb-4 shadow-sm">
+        <form method="get" class="d-flex flex-wrap gap-3 align-items-end">
+            <div class="filter-group" style="min-width: 200px;">
+                <label class="form-label text-muted small mb-1">Brand</label>
+                <select name="brand" class="form-select form-select-sm">
+                    <option value="">All Brands</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if selected_brand == brand.id %}selected{% endif %}>
+                        {{ brand.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group" style="min-width: 200px;">
+                <label class="form-label text-muted small mb-1">Type</label>
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    <option value="text" {% if selected_type == 'text' %}selected{% endif %}>Text</option>
+                    <option value="media" {% if selected_type == 'media' %}selected{% endif %}>Media</option>
+                    <option value="card" {% if selected_type == 'card' %}selected{% endif %}>Card</option>
+                </select>
+            </div>
+
+            <div class="filter-group" style="min-width: 200px;">
+                <label class="form-label text-muted small mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
+                    {% for status in status_choices %}
+                    <option value="{{ status.0 }}" {% if selected_status == status.0 %}selected{% endif %}>
+                        {{ status.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ms-auto">
+                <button type="submit" class="btn btn-primary btn-sm px-4">Apply</button>
+                <a href="{% url 'template_list' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                    <i class="fas fa-redo-alt"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Templates Table -->
     <div class="card">
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>Title</th>
@@ -24,22 +102,16 @@
                             <td>{{ template.title }}</td>
                             <td>{{ template.brand.name }}</td>
                             <td>{{ template.message_type }}</td>
-                            <td>{{ template.content|truncatewords:10 }}</td>
+                            <td>{{ template.content|truncatechars:50 }}</td>
                             <td>
-                                <span class="status-indicator 
-                                    {% if template.status == 'approved_system' or template.status == 'approved_admin' %}
-                                        status-approved
-                                    {% elif template.status == 'rejected_system' or template.status == 'rejected_admin' %}
-                                        status-rejected
-                                    {% else %}
-                                        status-{{ template.status }}
-                                    {% endif %}
-                                "></span>
+                                <span class="status-indicator status-{{ template.status }}"></span>
                                 {{ template.get_status_display }}
                             </td>
-                            <td>{{ template.created_at }}</td>
+                            <td>{{ template.created_at|date:"M d, Y H:i" }}</td>
                             <td>
-                                <!-- Add actions if needed -->
+                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}

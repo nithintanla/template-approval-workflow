@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
@@ -28,35 +28,99 @@ def create_template(request):
         if form.is_valid():
             template = form.save(commit=False)
             template.created_by = request.user
-            
-            # Get content moderation decision
-            decision, explanation = TemplateModeration.analyze_content(template.content)
-            
-            # Set template status based on decision
-            status_mapping = {
-                'Approve': 'approved_system',
-                'Reject': 'rejected_system',
-                'Manual': 'pending'
-            }
-            template.status = status_mapping.get(decision, 'pending')
+            template.status = 'pending_l1'  # Set initial status for L1 approval
             template.save()
-            
-            return JsonResponse({
-                'status': 'success',
-                'decision': decision,
-                'explanation': explanation,
-                'redirect_url': reverse('template_list')
-            })
-        else:
-            return JsonResponse({'status': 'error', 'errors': form.errors})
+            messages.success(request, 'Template created and sent for L1 approval.')
+            return redirect('template_list')
     else:
         form = TemplateForm()
     return render(request, 'dashboard/create_template.html', {'form': form})
 
 @login_required
 def template_list(request):
+    # Get filter parameters
+    brand = request.GET.get('brand')
+    message_type = request.GET.get('message_type')
+    status = request.GET.get('status')
+    date = request.GET.get('date')
+    stage = request.GET.get('stage')
+    aggregator = request.GET.get('aggregator')
+
+    # Base queryset
     templates = Template.objects.all()
-    return render(request, 'dashboard/template_list.html', {'templates': templates})
+
+    # Apply filters
+    if brand:
+        templates = templates.filter(brand_id=brand)
+    if message_type:
+        templates = templates.filter(message_type=message_type)
+    if status:
+        templates = templates.filter(status=status)
+    if date:
+        templates = templates.filter(created_at__date=date)
+    if stage:
+        templates = templates.filter(stage=stage)
+    if aggregator:
+        templates = templates.filter(aggregator=aggregator)
+
+    template_filters = [
+        {
+            'name': 'message_type',
+            'label': 'Message Type',
+            'selected': message_type,
+            'options': [
+                {'value': 'text', 'label': 'Text'},
+                {'value': 'media', 'label': 'Media'},
+                {'value': 'card', 'label': 'Card'},
+            ]
+        },
+        {
+            'name': 'stage',
+            'label': 'Stage',
+            'selected': stage,
+            'options': [
+                {'value': 'all', 'label': 'All'},
+                {'value': 'creation', 'label': 'Creation'},
+                {'value': 'review', 'label': 'Review'},
+            ]
+        },
+        {
+            'name': 'status',
+            'label': 'Status',
+            'selected': status,
+            'options': [
+                {'value': opt[0], 'label': opt[1]} 
+                for opt in Template.STATUS_CHOICES
+            ]
+        },
+        {
+            'name': 'brand',
+            'label': 'Brand',
+            'selected': brand,
+            'options': [
+                {'value': b.id, 'label': b.name} 
+                for b in Brand.objects.all()
+            ]
+        },
+        {
+            'name': 'aggregator',
+            'label': 'Aggregator',
+            'selected': aggregator,
+            'options': [
+                {'value': 'all', 'label': 'All'},
+                # Add your aggregator options here
+            ]
+        }
+    ]
+
+    context = {
+        'templates': templates,
+        'template_filters': template_filters,
+        'total_count': Template.objects.count(),
+        'pending_count': Template.objects.filter(status='pending').count(),
+    }
+
+    return render(request, 'dashboard/template_list.html', context)
 
 @login_required
 def approval_settings(request):
@@ -98,8 +162,24 @@ def update_template_status(request, template_id):
 
 @login_required
 def brand_list(request):
+    # Get filter parameters
+    search = request.GET.get('search', '')
+    date_from = request.GET.get('date_from')
+
+    # Base queryset
     brands = Brand.objects.all()
-    return render(request, 'dashboard/brand_list.html', {'brands': brands})
+
+    # Apply filters
+    if search:
+        brands = brands.filter(name__icontains=search)
+    if date_from:
+        brands = brands.filter(created_at__date=date_from)
+
+    context = {
+        'brands': brands,
+        'selected_date_from': date_from,
+    }
+    return render(request, 'dashboard/brand_list.html', context)
 
 @login_required
 def create_brand(request):
@@ -116,7 +196,29 @@ def create_brand(request):
 @login_required
 def agent_list(request):
     agents = Agent.objects.all()
-    return render(request, 'dashboard/agent_list.html', {'agents': agents})
+    brands = Brand.objects.all()
+    
+    # Handle filters
+    selected_brand = request.GET.get('brand')
+    selected_status = request.GET.get('status')
+    selected_date = request.GET.get('date')
+
+    if selected_brand:
+        agents = agents.filter(brand_id=selected_brand)
+    if selected_status:
+        is_active = selected_status == 'active'
+        agents = agents.filter(is_active=is_active)
+    if selected_date:
+        agents = agents.filter(created_at__date=selected_date)
+
+    context = {
+        'agents': agents,
+        'brands': brands,
+        'selected_brand': selected_brand,
+        'selected_status': selected_status,
+        'selected_date': selected_date,
+    }
+    return render(request, 'dashboard/agent_list.html', context)
 
 @login_required
 def create_agent(request):
@@ -129,6 +231,33 @@ def create_agent(request):
     else:
         form = AgentForm()
     return render(request, 'dashboard/create_agent.html', {'form': form})
+
+@login_required
+def edit_agent(request, agent_id):
+    agent = get_object_or_404(Agent, id=agent_id)
+    
+    if request.method == 'POST':
+        form = AgentForm(request.POST, instance=agent)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Agent updated successfully.')
+            return redirect('agent_list')
+    else:
+        form = AgentForm(instance=agent)
+    
+    return render(request, 'dashboard/edit_agent.html', {
+        'form': form,
+        'agent': agent
+    })
+
+@login_required
+def delete_agent(request, agent_id):
+    agent = get_object_or_404(Agent, id=agent_id)
+    if request.method == 'POST':
+        agent.delete()
+        messages.success(request, 'Agent deleted successfully.')
+        return redirect('agent_list')
+    return render(request, 'dashboard/delete_agent.html', {'agent': agent})
 
 def send_template_to_admin_for_approval(template):
     # Logic to send the template to the admin app for approval

@@ -13,4 +13,5 @@ urlpatterns = [
     path('agents/', views.agent_list, name='agent_list'),
     path('agents/create/', views.create_agent, name='create_agent'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('profile/', views.profile, name='profile'),
 ]

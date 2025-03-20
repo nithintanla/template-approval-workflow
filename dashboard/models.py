@@ -15,6 +15,10 @@ class Template(models.Model):
         ('rejected_system', 'Rejected by System'),
         ('approved_admin', 'Approved by Admin'),
         ('rejected_admin', 'Rejected by Admin'),
+        ('approved_l1', 'Approved by L1'),
+        ('rejected_l1', 'Rejected by L1'),
+        ('approved_l2', 'Approved by L2'),
+        ('rejected_l2', 'Rejected by L2'),
     ]
 
     MESSAGE_TYPES = [

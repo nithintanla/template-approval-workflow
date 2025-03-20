@@ -133,3 +133,7 @@ def create_agent(request):
 def send_template_to_admin_for_approval(template):
     # Logic to send the template to the admin app for approval
     pass
+
+@login_required
+def profile(request):
+    return render(request, 'dashboard/profile.html', {'user': request.user})

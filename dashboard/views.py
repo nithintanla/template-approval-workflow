@@ -14,10 +14,23 @@ def dashboard(request):
     templates = Template.objects.all()
     brands = Brand.objects.all()
     agents = Agent.objects.all()
+    
+    # Add counts for different template statuses
+    pending_count = templates.filter(status='pending_l1').count()
+    approved_l1_count = templates.filter(status='approved_l1').count()
+    approved_l2_count = templates.filter(status='approved_l2').count()
+    rejected_l1_count = templates.filter(status='rejected_l1').count()
+    rejected_l2_count = templates.filter(status='rejected_l2').count()
+    
     context = {
         'templates': templates,
         'brands': brands,
         'agents': agents,
+        'pending_count': pending_count,
+        'approved_l1_count': approved_l1_count,
+        'approved_l2_count': approved_l2_count,
+        'rejected_l1_count': rejected_l1_count,
+        'rejected_l2_count': rejected_l2_count,
     }
     return render(request, 'dashboard/dashboard.html', context)
 
@@ -266,3 +279,39 @@ def send_template_to_admin_for_approval(template):
 @login_required
 def profile(request):
     return render(request, 'dashboard/profile.html', {'user': request.user})
+
+@login_required
+def edit_template(request, template_id):
+    template = get_object_or_404(Template, id=template_id)
+    
+    if request.method == 'POST':
+        form = TemplateForm(request.POST, instance=template)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Template updated successfully.')
+            return redirect('template_list')
+    else:
+        form = TemplateForm(instance=template)
+    
+    return render(request, 'dashboard/edit_template.html', {
+        'form': form,
+        'template': template
+    })
+
+@login_required
+def edit_brand(request, brand_id):
+    brand = get_object_or_404(Brand, id=brand_id)
+    
+    if request.method == 'POST':
+        form = BrandForm(request.POST, instance=brand)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Brand updated successfully.')
+            return redirect('brand_list')
+    else:
+        form = BrandForm(instance=brand)
+    
+    return render(request, 'dashboard/edit_brand.html', {
+        'form': form,
+        'brand': brand
+    })

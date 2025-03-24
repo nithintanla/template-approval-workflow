@@ -109,7 +109,7 @@
                             </td>
                             <td>{{ template.created_at|date:"M d, Y H:i" }}</td>
                             <td>
-                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'edit_template' template.id %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>

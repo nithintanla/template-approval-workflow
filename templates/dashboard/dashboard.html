@@ -31,6 +31,52 @@
         </div>
     </div>
 
+    <!-- Additional Widgets for Template Statuses -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Templates</h5>
+                    <p class="card-text display-4">{{ pending_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Approved by L1</h5>
+                    <p class="card-text display-4">{{ approved_l1_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Approved by L2</h5>
+                    <p class="card-text display-4">{{ approved_l2_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Rejected by L1</h5>
+                    <p class="card-text display-4">{{ rejected_l1_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Rejected by L2</h5>
+                    <p class="card-text display-4">{{ rejected_l2_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Context Message -->
     <div class="card">
         <div class="card-body">

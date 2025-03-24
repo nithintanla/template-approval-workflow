@@ -16,4 +16,6 @@ urlpatterns = [
     path('agents/<int:agent_id>/delete/', views.delete_agent, name='delete_agent'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('profile/', views.profile, name='profile'),
+    path('templates/<int:template_id>/edit/', views.edit_template, name='edit_template'),
+    path('brands/<int:brand_id>/edit/', views.edit_brand, name='edit_brand'),
 ]

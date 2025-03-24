@@ -51,7 +51,7 @@
                             <td>{{ brand.description }}</td>
                             <td>{{ brand.created_at|date:"M d, Y H:i" }}</td>
                             <td>
-                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'edit_brand' brand.id %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>
